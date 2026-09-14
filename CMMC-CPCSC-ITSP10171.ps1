@@ -472,7 +472,7 @@ Write-Host "    [OK] [LEVEL 1] SI.L1-3.14.5 | CPCSC A.03.14.05 -- Scheduled scan
 
 # DEP and SEHOP -- exploit mitigation as malicious code protection
 # CMMC: SI.L1-3.14.2 | CPCSC: A.03.14.02
-# Source: DISA STIG WN11-00-000145/025 | CIS 18.8.21.5 | CCCS ITSP.70.012
+# Source: DISA STIG WN11-00-000145/150 | CIS 18.8.21.5 | CCCS ITSP.70.012
 bcdedit /set nx AlwaysOn | Out-Null
 Write-Host "    [OK] SI.L1-3.14.2 | CPCSC A.03.14.02 -- DEP AlwaysOn (restart required)" -ForegroundColor Green
 

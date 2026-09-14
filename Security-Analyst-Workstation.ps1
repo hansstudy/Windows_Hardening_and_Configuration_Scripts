@@ -122,9 +122,9 @@ New-TSGRestorePoint -Description "Security Analyst Workstation"
 
 # ================================================================================
 # CREDENTIAL AND IDENTITY PROTECTION
-# Source: DISA WN11-CC-000038 | WN11-SO-000100/190/195 | WN11-00-000095
+# Source: DISA WN11-CC-000038 | WN11-SO-000100/195/205 | WN11-00-000095
 # ================================================================================
-Write-TSGSection "CREDENTIAL AND IDENTITY PROTECTION" "DISA WN11-CC-000038 | WN11-SO-000100/190/195 | WN11-00-000095"
+Write-TSGSection "CREDENTIAL AND IDENTITY PROTECTION" "DISA WN11-CC-000038 | WN11-SO-000100/195/205 | WN11-00-000095"
 
 # Disable WDigest -- prevents cleartext credentials in LSASS memory
 # Source: DISA WN11-CC-000038 | CIS 18.9.29.1 | CCCS ITSP.70.012
@@ -278,12 +278,12 @@ Write-Host "    [OK] PS Transcription enabled -- output to $transcriptPath" -For
 
 # ================================================================================
 # ACCESS CONTROL
-# Source: DISA WN11-SO-000245/251 | WN11-CC-000030/150 | CCCS ITSP.70.012
+# Source: DISA WN11-SO-000245/250 | WN11-CC-000030/150 | CCCS ITSP.70.012
 # ================================================================================
-Write-TSGSection "ACCESS CONTROL" "DISA WN11-SO-000245/251 | WN11-CC-000030/150"
+Write-TSGSection "ACCESS CONTROL" "DISA WN11-SO-000245/250 | WN11-CC-000030/150"
 
 # UAC -- Always Notify (max level)
-# Source: DISA WN11-SO-000245/251 | CIS 2.3.17.1/2 | CCCS ITSP.70.012
+# Source: DISA WN11-SO-000245/250 | CIS 2.3.17.1/2 | CCCS ITSP.70.012
 Set-TSGRegistry -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "EnableLUA"                 -Value 1
 Set-TSGRegistry -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "PromptOnSecureDesktop"      -Value 1
 Set-TSGRegistry -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value 2
@@ -314,9 +314,9 @@ Write-Host "    [OK] Access control applied" -ForegroundColor Green
 
 # ================================================================================
 # TELEMETRY AND PRIVACY
-# Source: DISA WN11-CC-000010/206/225 | NSA/CISA | CCCS | PIPEDA
+# Source: DISA WN11-CC-000010/205/225 | NSA/CISA | CCCS | PIPEDA
 # ================================================================================
-Write-TSGSection "TELEMETRY AND PRIVACY" "DISA WN11-CC-000010/206/225"
+Write-TSGSection "TELEMETRY AND PRIVACY" "DISA WN11-CC-000010/205/225"
 
 # DiagTrack service left running. Disabling it breaks the Defender for Endpoint sensor.
 # The AllowTelemetry policy above controls the data level; the service itself must stay.
@@ -333,9 +333,9 @@ Write-Host "    [OK] Telemetry, Activity History, Recall, Advertising ID disable
 
 # ================================================================================
 # EXPLOIT MITIGATION
-# Source: DISA WN11-00-000145/025 | CIS 18.8.21.5 | NSA | CCCS ITSP.70.012
+# Source: DISA WN11-00-000145/150 | CIS 18.8.21.5 | NSA | CCCS ITSP.70.012
 # ================================================================================
-Write-TSGSection "EXPLOIT MITIGATION" "DISA WN11-00-000145/025 | CIS 18.8.21.5 | NSA"
+Write-TSGSection "EXPLOIT MITIGATION" "DISA WN11-00-000145/150 | CIS 18.8.21.5 | NSA"
 
 # DEP AlwaysOn -- restart required
 # Source: DISA WN11-00-000145 | CIS 18.8.21.5 | NSA | CCCS ITSP.70.012

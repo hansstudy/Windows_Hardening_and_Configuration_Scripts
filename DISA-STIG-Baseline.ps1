@@ -174,9 +174,9 @@ New-TSGRestorePoint -Description "DISA STIG Baseline"
 
 # ================================================================================
 # CREDENTIAL AND IDENTITY PROTECTION
-# Source: DISA WN11-CC-000038 | WN11-SO-000100/190/195 | WN11-00-000095
+# Source: DISA WN11-CC-000038 | WN11-SO-000100/195/205 | WN11-00-000095
 # ================================================================================
-Write-TSGSection "CREDENTIAL AND IDENTITY PROTECTION" "DISA WN11-CC-000038 | WN11-SO-000100/190/195 | WN11-00-000095"
+Write-TSGSection "CREDENTIAL AND IDENTITY PROTECTION" "DISA WN11-CC-000038 | WN11-SO-000100/195/205 | WN11-00-000095"
 
 # Disable WDigest -- prevents cleartext credentials in LSASS memory
 # DISA CAT II: WN11-CC-000038 | CIS 18.9.29.1 | CCCS ITSP.70.012
@@ -306,16 +306,16 @@ Write-Host "    [OK] PS Script Block Logging and Transcription enabled" -Foregro
 
 # ================================================================================
 # ACCESS CONTROL
-# Source: DISA WN11-SO-000245/251 | WN11-CC-000020/030/150 | WN11-00-000031
+# Source: DISA WN11-SO-000245/250 | WN11-CC-000020/030/150 | WN11-00-000030
 # ================================================================================
-Write-TSGSection "ACCESS CONTROL" "DISA WN11-SO-000245/251 | WN11-CC-000020/030/150 | WN11-00-000031"
+Write-TSGSection "ACCESS CONTROL" "DISA WN11-SO-000245/250 | WN11-CC-000020/030/150 | WN11-00-000030"
 
 # UAC -- Always Notify (maximum level, ConsentPromptBehaviorAdmin = 2)
 # DISA CAT I: WN11-SO-000245 | DISA CAT II: WN11-SO-000251
 Set-TSGRegistry -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "EnableLUA"                 -Value 1
 Set-TSGRegistry -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "PromptOnSecureDesktop"      -Value 1
 Set-TSGRegistry -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "ConsentPromptBehaviorAdmin" -Value 2
-Write-Host "    [OK] UAC Always Notify -- WN11-SO-000245/251" -ForegroundColor Green
+Write-Host "    [OK] UAC Always Notify -- WN11-SO-000245/250" -ForegroundColor Green
 
 # Disable AutoRun on all drive types (NoDriveTypeAutoRun = 255 = all types)
 # DISA CAT II: WN11-CC-000150 | CIS 18.9.8.1 | CCCS ITSP.70.012
@@ -412,9 +412,9 @@ Write-Host "    [OK] Access control applied" -ForegroundColor Green
 
 # ================================================================================
 # TELEMETRY AND PRIVACY
-# Source: DISA WN11-CC-000010/206/225 | CIS 18.9.16/44/46
+# Source: DISA WN11-CC-000010/205/225 | CIS 18.9.16/44/46
 # ================================================================================
-Write-TSGSection "TELEMETRY AND PRIVACY" "DISA WN11-CC-000010/206/225"
+Write-TSGSection "TELEMETRY AND PRIVACY" "DISA WN11-CC-000010/205/225"
 
 # Disable DiagTrack
 # DISA CAT II: WN11-CC-000205 | CIS 18.9.16.1 | CCCS ITSP.70.012
@@ -443,9 +443,9 @@ Write-Host "    [OK] Telemetry, Activity History, Recall, Advertising ID disable
 
 # ================================================================================
 # EXPLOIT MITIGATION
-# Source: DISA WN11-00-000145/025 | CIS 18.8.21.5 | NSA | CCCS ITSP.70.012
+# Source: DISA WN11-00-000145/150 | CIS 18.8.21.5 | NSA | CCCS ITSP.70.012
 # ================================================================================
-Write-TSGSection "EXPLOIT MITIGATION" "DISA WN11-00-000145/025 | CIS 18.8.21.5 | NSA"
+Write-TSGSection "EXPLOIT MITIGATION" "DISA WN11-00-000145/150 | CIS 18.8.21.5 | NSA"
 
 # DEP AlwaysOn -- data memory pages non-executable, restart required
 # DISA CAT II: WN11-00-000145 | CIS 18.8.21.5 | NSA | CCCS ITSP.70.012

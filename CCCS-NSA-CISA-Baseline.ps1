@@ -304,7 +304,7 @@ Write-Host "    [OK] PS Transcription enabled -- output to $transcriptPath" -For
 # ════════════════════════════════════════════════════════════════════════════════
 # ACCESS CONTROL
 # ════════════════════════════════════════════════════════════════════════════════
-Write-TSGSection "ACCESS CONTROL" "DISA WN11-SO-000245/251 | CIS 2.3.17 | CCCS ITSP.70.012"
+Write-TSGSection "ACCESS CONTROL" "DISA WN11-SO-000245/250 | CIS 2.3.17 | CCCS ITSP.70.012"
 
 # UAC enabled -- standard prompt level (not Always Notify)
 # Source: DISA WN11-SO-000245 | CIS 2.3.17.1 | CCCS ITSP.70.012
@@ -373,7 +373,7 @@ Write-Host "    [OK] Telemetry, Activity History, Recall, Advertising ID disable
 # ════════════════════════════════════════════════════════════════════════════════
 # EXPLOIT MITIGATION
 # ════════════════════════════════════════════════════════════════════════════════
-Write-TSGSection "EXPLOIT MITIGATION" "DISA WN11-00-000145/025 | CIS 18.8.21.5 | NSA | CCCS ITSP.70.012"
+Write-TSGSection "EXPLOIT MITIGATION" "DISA WN11-00-000145/150 | CIS 18.8.21.5 | NSA | CCCS ITSP.70.012"
 
 # DEP AlwaysOn -- marks data memory pages non-executable, restart required
 # Source: DISA WN11-00-000145 | CIS 18.8.21.5 | NSA | CCCS ITSP.70.012

@@ -202,7 +202,7 @@ Disable-WindowsOptionalFeature -Online -FeatureName "Recall" -NoRestart -ErrorAc
 Write-Host "    [OK] Telemetry and Recall disabled" -ForegroundColor Green
 
 
-Write-TSGSection "EXPLOIT MITIGATION" "DISA WN11-00-000145/025 | CCCS ITSP.70.012"
+Write-TSGSection "EXPLOIT MITIGATION" "DISA WN11-00-000145/150 | CCCS ITSP.70.012"
 
 # DEP -- marks data memory pages non-executable, restart required
 # Source: DISA WN11-00-000145 | CIS 18.8.21.5 | NSA | CCCS ITSP.70.012

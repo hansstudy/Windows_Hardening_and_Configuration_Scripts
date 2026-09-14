@@ -311,9 +311,9 @@ Write-Host "    [OK] Access control applied" -ForegroundColor Green
 
 # ================================================================================
 # TELEMETRY AND PRIVACY
-# Source: DISA WN11-CC-000010/206/225 | NSA/CISA | CCCS | PIPEDA
+# Source: DISA WN11-CC-000010/205/225 | NSA/CISA | CCCS | PIPEDA
 # ================================================================================
-Write-TSGSection "TELEMETRY AND PRIVACY" "DISA WN11-CC-000010/206/225"
+Write-TSGSection "TELEMETRY AND PRIVACY" "DISA WN11-CC-000010/205/225"
 
 # DiagTrack service left running. Disabling it breaks the Defender for Endpoint sensor.
 # The AllowTelemetry policy above controls the data level; the service itself must stay.
