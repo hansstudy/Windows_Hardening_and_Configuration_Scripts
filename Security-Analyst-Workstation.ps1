@@ -404,11 +404,11 @@ Write-Host "  Log: $LogPath" -ForegroundColor Gray
 Write-Host "  RESTART REQUIRED: DEP, LSA Protection, Credential Guard" -ForegroundColor Yellow
 Write-Host "  Hans Study | https://hans.study | contact@hans.study" -ForegroundColor DarkGray
 
+Stop-Transcript | Out-Null
+
 $restart = Read-Host "  Restart now? [y/N]"
 if ($restart -match '^[Yy]') {
     Write-Host "  Restarting in 15 seconds. Press Ctrl+C to cancel." -ForegroundColor Yellow
     Start-Sleep -Seconds 15
     Restart-Computer -Force
 }
-
-Stop-Transcript | Out-Null

@@ -225,6 +225,11 @@ Write-Host "    Apply CCCS-NSA-CISA-Baseline.ps1 for comprehensive hardening." -
 Write-Host "    Apply DISA-STIG-Baseline.ps1 for DoD-level hardening." -ForegroundColor DarkGray
 Write-Host "  Hans Study | https://hans.study | contact@hans.study" -ForegroundColor DarkGray
 
-$restart = Read-Host "  Restart now? [y/N]"
-if ($restart -match '^[Yy]') { Write-Host "  Restarting..." -ForegroundColor Yellow; Start-Sleep -Seconds 15; Restart-Computer -Force }
 Stop-Transcript | Out-Null
+
+$restart = Read-Host "  Restart now? [y/N]"
+if ($restart -match '^[Yy]') {
+    Write-Host "  Restarting in 15 seconds. Press Ctrl+C to cancel." -ForegroundColor Yellow
+    Start-Sleep -Seconds 15
+    Restart-Computer -Force
+}

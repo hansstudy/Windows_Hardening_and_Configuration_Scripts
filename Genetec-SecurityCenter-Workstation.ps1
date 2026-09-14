@@ -819,11 +819,11 @@ Write-Host ""
 Write-Host "  Hans Study | https://hans.study | contact@hans.study" -ForegroundColor DarkGray
 Write-Host "  Hans Study, CISSP | LinkedIn: hans-study | @StudyByt3s on X / Instagram / YouTube" -ForegroundColor DarkGray
 
+Stop-Transcript | Out-Null
+
 $restart = Read-Host "  Restart now to apply all changes? [y/N]"
 if ($restart -match '^[Yy]') {
     Write-Host "  Restarting in 15 seconds. Press Ctrl+C to cancel." -ForegroundColor Yellow
     Start-Sleep -Seconds 15
     Restart-Computer -Force
 }
-
-Stop-Transcript | Out-Null
