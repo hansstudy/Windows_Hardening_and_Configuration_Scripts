@@ -18,6 +18,10 @@
       Hibernation is DISABLED. Kiosks must never sleep or hibernate.
       All consumer apps are removed. Clean OS only.
       BitLocker is enabled. Physical access must not yield data access.
+      Removable storage is denied machine-wide.
+      With -KioskApp and -KioskUser, Explorer is replaced by the kiosk app as that
+      account's shell, and Task Manager, lock, log off, Run, and Control Panel are
+      disabled for it. Without those parameters the machine is hardened but not kiosked.
 
 .NOTES
     ================================================================
@@ -52,6 +56,18 @@
     Hans Study accepts no liability for unintended consequences.
     ================================================================
 #>
+
+[CmdletBinding()]
+param(
+    # Full path to the kiosk application executable. When supplied together with
+    # -KioskUser, the app is allow-listed in Controlled Folder Access and becomes
+    # that account's shell in place of Explorer.
+    [string]$KioskApp,
+
+    # Local standard-user account the kiosk runs as. Created if missing (you are
+    # prompted for a password). The script refuses to proceed if it is an administrator.
+    [string]$KioskUser
+)
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Continue"
@@ -124,9 +140,9 @@ New-TSGRestorePoint -Description "Kiosk / Thin Client Lockdown"
 
 # ================================================================================
 # CREDENTIAL AND IDENTITY PROTECTION
-# Source: DISA WN11-CC-000038 | WN11-SO-000100/190/195 | WN11-00-000095
+# Source: DISA WN11-CC-000038 | WN11-SO-000100/195/205 | WN11-00-000095
 # ================================================================================
-Write-TSGSection "CREDENTIAL AND IDENTITY PROTECTION" "DISA WN11-CC-000038 | WN11-SO-000100/190/195"
+Write-TSGSection "CREDENTIAL AND IDENTITY PROTECTION" "DISA WN11-CC-000038 | WN11-SO-000100/195/205"
 
 Set-TSGRegistry -Path "HKLM:\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest" -Name "UseLogonCredential" -Value 0  # WN11-CC-000038
 Set-TSGRegistry -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" -Name "NoLMHash"           -Value 1                         # WN11-SO-000195
@@ -160,11 +176,11 @@ Set-TSGRegistry -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\DNSClient" -
 
 Disable-TSGNetBIOS  # WN11-CC-000080
 
-# Disable IPv6 -- kiosk machines do not need it, removes attack surface
+# Prefer IPv4 over IPv6 -- kiosk machines do not need IPv6, reduces attack surface
 # Source: NSA IPv6 guidance | CCCS ITSP.70.012
 # DisabledComponents = 0x20 prefers IPv4 over IPv6 (Microsoft-recommended). 0xFF also kills loopback and adds a 5-second boot delay.
 Set-TSGRegistry -Path "HKLM:\SYSTEM\CurrentControlSet\Services\Tcpip6\Parameters" -Name "DisabledComponents" -Value 32
-Write-Host "    [OK] IPv6 disabled (restart required)" -ForegroundColor Green
+Write-Host "    [OK] IPv6 set to prefer IPv4 (restart required)" -ForegroundColor Green
 
 Set-NetFirewallProfile -Profile Domain,Public,Private -Enabled True
 Set-NetFirewallProfile -Profile Domain,Public,Private -DefaultInboundAction Block
@@ -185,14 +201,11 @@ Start-Service -Name "WinDefend" -ErrorAction SilentlyContinue
 Set-MpPreference -DisableRealtimeMonitoring $false
 Set-MpPreference -EnableNetworkProtection Enabled
 
-# Enable Controlled Folder Access on kiosk machines
-# Kiosk applications typically write to one or two known paths.
-# CFA blocks ransomware from encrypting kiosk content.
-# If CFA blocks your kiosk app, add an exclusion:
-#   Add-MpPreference -ControlledFolderAccessAllowedApplications "C:\KioskApp\App.exe"
+# Enable Controlled Folder Access. The kiosk app is allow-listed in the KIOSK MODE
+# section below when -KioskApp is supplied; without it, CFA will block the app from
+# Documents, Desktop, and Pictures on first run.
 Set-MpPreference -EnableControlledFolderAccess Enabled
 Write-Host "    [OK] Defender with CFA enabled (anti-ransomware)" -ForegroundColor Green
-Write-Host "    [NOTE] If CFA blocks the kiosk app: Add-MpPreference -ControlledFolderAccessAllowedApplications 'App.exe'" -ForegroundColor Yellow
 
 
 # ================================================================================
@@ -225,9 +238,9 @@ Write-Host "    [OK] PS Script Block Logging enabled" -ForegroundColor Green
 
 # ================================================================================
 # ACCESS CONTROL -- MAXIMUM RESTRICTION
-# Source: DISA WN11-SO-000245/251 | WN11-CC-000020/030/150 | WN11-00-000031
+# Source: DISA WN11-SO-000245/250 | WN11-CC-000020/030/150 | WN11-00-000030
 # ================================================================================
-Write-TSGSection "ACCESS CONTROL -- MAXIMUM RESTRICTION" "DISA WN11-SO-000245/251 | WN11-CC-000020/030/150"
+Write-TSGSection "ACCESS CONTROL -- MAXIMUM RESTRICTION" "DISA WN11-SO-000245/250 | WN11-CC-000020/030/150"
 
 # UAC -- Always Notify (ConsentPromptBehaviorAdmin = 2)
 # Any elevation attempt on a kiosk should be conspicuous and require admin interaction
@@ -241,7 +254,6 @@ Set-TSGRegistry -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\
 # Disable AutoRun on all drive types
 # Source: DISA WN11-CC-000150 | CIS 18.9.8.1 | CCCS ITSP.70.012
 Set-TSGRegistry -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoDriveTypeAutoRun" -Value 255
-Set-TSGRegistry -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoDriveTypeAutoRun" -Value 255
 
 # Disable RDP -- no remote administration on a kiosk, physical access only
 # Source: DISA WN11-CC-000020 | CIS 18.9.59.2 | CCCS ITSP.70.012
@@ -310,7 +322,6 @@ Set-TSGRegistry -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\
 Set-TSGRegistry -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System" -Name "PublishUserActivities" -Value 0
 Set-TSGRegistry -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\System" -Name "UploadUserActivities"  -Value 0
 Set-TSGRegistry -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsAI" -Name "DisableAIDataAnalysis" -Value 1
-Set-TSGRegistry -Path "HKCU:\SOFTWARE\Policies\Microsoft\Windows\WindowsAI" -Name "DisableAIDataAnalysis" -Value 1
 Disable-WindowsOptionalFeature -Online -FeatureName "Recall" -NoRestart -ErrorAction SilentlyContinue | Out-Null
 Set-TSGRegistry -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\AdvertisingInfo" -Name "DisabledByGroupPolicy" -Value 1
 Write-Host "    [OK] Telemetry, Recall, Advertising ID disabled" -ForegroundColor Green
@@ -348,22 +359,18 @@ Stop-Service -Name "WSearch" -ErrorAction SilentlyContinue
 Set-Service  -Name "WSearch" -StartupType Disabled
 Write-Host "    [OK] Windows Search Indexing disabled" -ForegroundColor Green
 
-# Performance visual effects -- appearance is irrelevant on a kiosk
-Set-TSGRegistry -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" -Name "VisualFXSetting" -Value 2
-Write-Host "    [OK] Visual effects set to performance mode" -ForegroundColor Green
-
 
 # ================================================================================
 # EXPLOIT MITIGATION
-# Source: DISA WN11-00-000145/025 | CIS 18.8.21.5 | NSA | CCCS ITSP.70.012
+# Source: DISA WN11-00-000145/150 | NSA | CCCS ITSP.70.012
 # ================================================================================
-Write-TSGSection "EXPLOIT MITIGATION" "DISA WN11-00-000145/025 | CIS 18.8.21.5"
+Write-TSGSection "EXPLOIT MITIGATION" "DISA WN11-00-000145/150"
 
 bcdedit /set nx AlwaysOn | Out-Null
 Write-Host "    [OK] DEP set to AlwaysOn (restart required)" -ForegroundColor Green
 
 Set-ProcessMitigation -System -Enable BottomUp,HighEntropy -ErrorAction SilentlyContinue
-Write-Host "    [OK] ASLR and forced relocation enabled" -ForegroundColor Green
+Write-Host "    [OK] ASLR bottom-up and high-entropy enabled" -ForegroundColor Green
 
 # Value 0 ENABLES SEHOP (counterintuitive registry name, confirmed in DISA WN11-00-000150)
 Set-TSGRegistry -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" -Name "DisableExceptionChainValidation" -Value 0
@@ -400,13 +407,109 @@ Remove-TSGAppx -PackageName "Microsoft.Todos"                        -FriendlyNa
 Remove-TSGAppx -PackageName "Microsoft.PowerAutomateDesktop"         -FriendlyName "Power Automate Desktop"
 Remove-TSGAppx -PackageName "BytedancePte.TikTok"                    -FriendlyName "TikTok"
 
-Set-TSGRegistry -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "ContentDeliveryAllowed"      -Value 0
-Set-TSGRegistry -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContentEnabled"     -Value 0
-Set-TSGRegistry -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SystemPaneSuggestionsEnabled" -Value 0
 Set-TSGRegistry -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CloudContent" -Name "DisableWindowsConsumerFeatures" -Value 1
-Set-TSGRegistry -Path "HKCU:\SOFTWARE\Policies\Microsoft\Windows\CloudContent" -Name "DisableWindowsSpotlightFeatures" -Value 1
 Write-Host "    [OK] All consumer apps and Start Menu ads removed" -ForegroundColor Green
 
+
+# ================================================================================
+# KIOSK MODE -- SINGLE-APPLICATION SHELL
+# Hardening alone leaves Explorer, Task Manager, and the Start menu reachable.
+# This section denies removable storage for everyone and, when -KioskApp and
+# -KioskUser are supplied, turns the machine into a single-app kiosk for that account.
+# Source: Microsoft "Set up a single-app kiosk" | CIS Windows 11 L2 removable storage
+# ================================================================================
+Write-TSGSection "KIOSK MODE -- SINGLE-APPLICATION SHELL" "Requires -KioskApp and -KioskUser for the shell lock"
+
+# Removable storage denied machine-wide. A guard terminal has no business mounting USB mass storage.
+Set-TSGRegistry -Path "HKLM:\SOFTWARE\Policies\Microsoft\Windows\RemovableStorageDevices" -Name "Deny_All" -Value 1
+Write-Host "    [OK] All removable storage classes denied (restart required)" -ForegroundColor Green
+
+if (-not $KioskApp -or -not $KioskUser) {
+    Write-Host "    [NOTE] -KioskApp and -KioskUser were not supplied. The machine is hardened but Explorer" -ForegroundColor Yellow
+    Write-Host "           remains the shell. Re-run with both to lock one app to one account:" -ForegroundColor Yellow
+    Write-Host "           .\Kiosk-ThinClient-Lockdown.ps1 -KioskApp 'C:\Kiosk\App.exe' -KioskUser 'kiosk'" -ForegroundColor DarkGray
+}
+else {
+    $kioskOk = $true
+
+    if (-not (Test-Path -LiteralPath $KioskApp -PathType Leaf)) {
+        Write-Host "    [FAIL] -KioskApp not found: $KioskApp" -ForegroundColor Red
+        $kioskOk = $false
+    }
+
+    $acct = Get-LocalUser -Name $KioskUser -ErrorAction SilentlyContinue
+    if (-not $acct) {
+        Write-Host "    Creating local user '$KioskUser'. Enter a password at the prompt." -ForegroundColor DarkGray
+        try {
+            $pw = Read-Host -AsSecureString "    Password for $KioskUser"
+            $acct = New-LocalUser -Name $KioskUser -Password $pw -PasswordNeverExpires -UserMayNotChangePassword -ErrorAction Stop
+            Write-Host "    [OK] Local user '$KioskUser' created" -ForegroundColor Green
+        } catch {
+            Write-Host "    [FAIL] Could not create '$KioskUser': $($_.Exception.Message)" -ForegroundColor Red
+            $kioskOk = $false
+        }
+    }
+
+    if ($acct) {
+        $isAdmin = Get-LocalGroupMember -Group "Administrators" -ErrorAction SilentlyContinue | Where-Object { $_.SID -eq $acct.SID }
+        if ($isAdmin) {
+            Write-Host "    [FAIL] '$KioskUser' is a member of Administrators. A kiosk account must be a standard user." -ForegroundColor Red
+            $kioskOk = $false
+        }
+    }
+
+    if ($kioskOk) {
+        # CFA must trust the kiosk app or it cannot write to Documents, Desktop, or Pictures.
+        Add-MpPreference -ControlledFolderAccessAllowedApplications $KioskApp -ErrorAction SilentlyContinue
+        Write-Host "    [OK] Controlled Folder Access allow-list: $KioskApp" -ForegroundColor Green
+
+        # Load the kiosk user's hive so per-user policy lands even if the account has never logged on.
+        $sid = $acct.SID.Value
+        $hiveKey = "HKU\$sid"
+        $hiveLoaded = $false
+        if (-not (Test-Path "Registry::$hiveKey")) {
+            $profilePath = (Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\$sid" -ErrorAction SilentlyContinue).ProfileImagePath
+            if (-not $profilePath) { $profilePath = "C:\Users\$KioskUser" }
+            $ntuser = Join-Path $profilePath "NTUSER.DAT"
+            if (Test-Path -LiteralPath $ntuser) {
+                reg.exe load $hiveKey $ntuser | Out-Null
+                $hiveLoaded = ($LASTEXITCODE -eq 0)
+            }
+        }
+
+        if (Test-Path "Registry::$hiveKey") {
+            $u = "Registry::$hiveKey"
+            # Replace Explorer with the kiosk app as this account's shell.
+            Set-TSGRegistry -Path "$u\Software\Microsoft\Windows NT\CurrentVersion\Winlogon" -Name "Shell" -Value $KioskApp -Type String
+            # Remove every escape hatch a standard user could reach from the kiosk app.
+            Set-TSGRegistry -Path "$u\Software\Microsoft\Windows\CurrentVersion\Policies\System"   -Name "DisableTaskMgr"         -Value 1
+            Set-TSGRegistry -Path "$u\Software\Microsoft\Windows\CurrentVersion\Policies\System"   -Name "DisableLockWorkstation" -Value 1
+            Set-TSGRegistry -Path "$u\Software\Microsoft\Windows\CurrentVersion\Policies\System"   -Name "DisableChangePassword"  -Value 1
+            Set-TSGRegistry -Path "$u\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoLogoff"               -Value 1
+            Set-TSGRegistry -Path "$u\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoClose"                -Value 1
+            Set-TSGRegistry -Path "$u\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoRun"                  -Value 1
+            Set-TSGRegistry -Path "$u\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoControlPanel"         -Value 1
+            Set-TSGRegistry -Path "$u\Software\Microsoft\Windows\CurrentVersion\Policies\Explorer" -Name "NoDriveTypeAutoRun"     -Value 255
+            # Operator-facing settings that belong in the kiosk account, not the admin's.
+            Set-TSGRegistry -Path "$u\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects"    -Name "VisualFXSetting"              -Value 2
+            Set-TSGRegistry -Path "$u\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SubscribedContentEnabled"     -Value 0
+            Set-TSGRegistry -Path "$u\Software\Microsoft\Windows\CurrentVersion\ContentDeliveryManager" -Name "SystemPaneSuggestionsEnabled" -Value 0
+            Write-Host "    [OK] '$KioskUser' shell is now the kiosk app. Task Manager, lock, log off, Run, Control Panel disabled." -ForegroundColor Green
+        } else {
+            Write-Host "    [FAIL] Registry hive for '$KioskUser' is not available. Log on as that user once, log off, then re-run." -ForegroundColor Red
+        }
+
+        if ($hiveLoaded) { [gc]::Collect(); reg.exe unload $hiveKey | Out-Null }
+
+        if ($IsEnterprise) {
+            Write-Host "    [NOTE] Enterprise detected. Microsoft's supported path for Win32 kiosks is Shell Launcher v2:" -ForegroundColor Yellow
+            Write-Host "           Enable-WindowsOptionalFeature -Online -FeatureName Client-EmbeddedShellLauncher" -ForegroundColor DarkGray
+            Write-Host "           The per-user shell set above works on Pro and Enterprise and needs no feature install." -ForegroundColor DarkGray
+        }
+        Write-Host "    [NOTE] For unattended boot, configure auto-logon with Sysinternals Autologon. It stores the password" -ForegroundColor Yellow
+        Write-Host "           in LSA secrets rather than plaintext registry: Autologon.exe $KioskUser . <password>" -ForegroundColor DarkGray
+    }
+}
 
 # ================================================================================
 # FINALIZATION
@@ -423,14 +526,17 @@ if ($SkippedEntControls.Count -gt 0) {
 Write-Host ""
 Write-Host "  Kiosk lockdown complete." -ForegroundColor DarkYellow
 Write-Host "  Log: $LogPath" -ForegroundColor Gray
-Write-Host "  RESTART REQUIRED: DEP, LSA Protection, IPv6 disable, Credential Guard, BitLocker" -ForegroundColor Yellow
+Write-Host "  RESTART REQUIRED: DEP, LSA Protection, IPv6 preference, Credential Guard, BitLocker, removable storage policy" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "  POST-RESTART CHECKLIST:" -ForegroundColor Gray
-Write-Host "    1. Launch the kiosk application and verify it starts correctly" -ForegroundColor DarkGray
-Write-Host "    2. If CFA blocks the app: Add-MpPreference -ControlledFolderAccessAllowedApplications 'App.exe'" -ForegroundColor DarkGray
-Write-Host "    3. Verify no firewall rules are blocking required connections" -ForegroundColor DarkGray
-Write-Host "    4. Review C:\Logs\ for any [FAIL] entries and address them" -ForegroundColor DarkGray
+Write-Host "    1. Log on as the kiosk account and confirm the app launches as the shell with no Explorer" -ForegroundColor DarkGray
+Write-Host "    2. Try Ctrl+Alt+Del, Ctrl+Shift+Esc, and Win+R from the kiosk account; all should be inert" -ForegroundColor DarkGray
+Write-Host "    3. Insert a USB drive; it must not mount" -ForegroundColor DarkGray
+Write-Host "    4. Verify no firewall rules are blocking required connections" -ForegroundColor DarkGray
+Write-Host "    5. Review C:\Logs\ for any [FAIL] entries and address them" -ForegroundColor DarkGray
 Write-Host "  Hans Study | https://hans.study | contact@hans.study" -ForegroundColor DarkGray
+
+Stop-Transcript | Out-Null
 
 $restart = Read-Host "  Restart now? [y/N]"
 if ($restart -match '^[Yy]') {
@@ -438,5 +544,3 @@ if ($restart -match '^[Yy]') {
     Start-Sleep -Seconds 15
     Restart-Computer -Force
 }
-
-Stop-Transcript | Out-Null

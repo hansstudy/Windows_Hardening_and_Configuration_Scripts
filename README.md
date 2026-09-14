@@ -215,11 +215,13 @@ DISA STIG-level hardening with analyst-specific carve-outs:
 
 Maximum restriction. RDP, NetBIOS, and LLMNR are disabled. IPv6 is set to prefer IPv4 rather than disabled outright, since a full disable breaks loopback and adds a five-second boot delay. UAC is set to Always Notify and standard user elevation is auto-denied. WSH is disabled. BitLocker is enabled. AppLocker service is started on Enterprise (rules require Group Policy). High Performance power plan is on, hibernation is off, SysMain and WSearch are disabled, and all consumer apps are removed.
 
-Verify the kiosk application works correctly after applying. If Controlled Folder Access blocks it:
+Pass the kiosk application and the local account it runs as to get a true single-app kiosk. The app is allow-listed in Controlled Folder Access and becomes that account's shell in place of Explorer. Task Manager, lock, log off, Run, and Control Panel are disabled for that account. Removable storage is denied machine-wide whether or not the parameters are supplied.
 
 ```powershell
-Add-MpPreference -ControlledFolderAccessAllowedApplications "C:\Path\To\KioskApp.exe"
+.\Kiosk-ThinClient-Lockdown.ps1 -KioskApp "C:\Kiosk\App.exe" -KioskUser "kiosk"
 ```
+
+Without the two parameters the script hardens the machine but leaves Explorer as the shell. The account must be a standard user; the script refuses an administrator. For unattended boot use Sysinternals Autologon, which stores the password in LSA secrets rather than plaintext registry. On Enterprise, Shell Launcher v2 is Microsoft's supported alternative to the per-user shell.
 
 ---
 
